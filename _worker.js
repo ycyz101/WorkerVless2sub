@@ -32,7 +32,7 @@ let addressescsv = [
 	//'https://raw.githubusercontent.com/cmliu/WorkerVless2sub/main/addressescsv.csv', //iptest测速结果文件。
 ];
 
-let subconverter = "subapi-loadbalancing.pages.dev"; //在线订阅转换后端，目前使用CM的订阅转换功能。支持自建psub 可自行搭建https://github.com/bulianglin/psub
+let subconverter = "SUBAPI.fxxk.dedyn.io"; //在线订阅转换后端，目前使用CM的订阅转换功能。支持自建psub 可自行搭建https://github.com/bulianglin/psub
 let subconfig = "https://raw.githubusercontent.com/cmliu/ACL4SSR/main/Clash/config/ACL4SSR_Online_Full_MultiMode.ini"; //订阅转换配置文件
 let noTLS = 'false'; //改为 true , 将不做域名判断 始终返回noTLS节点
 let link = '';
@@ -162,8 +162,7 @@ async function getAddressescsv(tls) {
 			// 检查CSV头部是否包含必需字段
 			const header = lines[0].split(',');
 			const tlsIndex = header.indexOf('TLS');
-			const speedIndex = header.length - 1; // 最后一个字段
-		
+			
 			const ipAddressIndex = 0;// IP地址在 CSV 头部的位置
 			const portIndex = 1;// 端口在 CSV 头部的位置
 			const dataCenterIndex = tlsIndex + 1; // 数据中心是 TLS 的后一个字段
@@ -176,7 +175,7 @@ async function getAddressescsv(tls) {
 			// 从第二行开始遍历CSV行
 			for (let i = 1; i < lines.length; i++) {
 				const columns = lines[i].split(',');
-		
+				const speedIndex = columns.length - 1; // 最后一个字段
 				// 检查TLS是否为"TRUE"且速度大于DLS
 				if (columns[tlsIndex].toUpperCase() === tls && parseFloat(columns[speedIndex]) > DLS) {
 					const ipAddress = columns[ipAddressIndex];
@@ -483,7 +482,7 @@ export default {
 				const uniqueAddressesnotls = [...new Set(addressesnotls)];
 
 				notlsresponseBody = uniqueAddressesnotls.map(address => {
-					let port = "80";
+					let port = "-1";
 					let addressid = address;
 				
 					const match = addressid.match(regex);
@@ -514,7 +513,7 @@ export default {
 					}
 
 					const httpPorts = ["8080","8880","2052","2082","2086","2095"];
-					if (!isValidIPv4(address) && port == "80") {
+					if (!isValidIPv4(address) && port == "-1") {
 						for (let httpPort of httpPorts) {
 							if (address.includes(httpPort)) {
 								port = httpPort;
@@ -522,6 +521,7 @@ export default {
 							}
 						}
 					}
+					if (port == "-1") port = "80";
 					//console.log(address, port, addressid);
 
 					if (edgetunnel.trim() === 'cmliu' && RproxyIP.trim() === 'true') {
@@ -561,7 +561,7 @@ export default {
 			}
 
 			const responseBody = uniqueAddresses.map(address => {
-				let port = "443";
+				let port = "-1";
 				let addressid = address;
 			
 				const match = addressid.match(regex);
@@ -592,7 +592,7 @@ export default {
 				}
 
 				const httpsPorts = ["2053","2083","2087","2096","8443"];
-				if (!isValidIPv4(address) && port == "443") {
+				if (!isValidIPv4(address) && port == "-1") {
 					for (let httpsPort of httpsPorts) {
 						if (address.includes(httpsPort)) {
 							port = httpsPort;
@@ -600,6 +600,8 @@ export default {
 						}
 					}
 				}
+				if (port == "-1") port = "443";
+				
 				//console.log(address, port, addressid);
 		
 				if (edgetunnel.trim() === 'cmliu' && RproxyIP.trim() === 'true') {
